@@ -1,43 +1,12 @@
 import { useCallback, useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
+import { Controller } from "react-hook-form";
 
 import { FormField, FormData } from "./FormTypes";
 import { initialValues } from "./FormInitialData";
 import { NestedFields } from "./NestedFields";
+import { useFormContext } from "./FormContext";
 
 const damagedPartsOptions = ["roof", "front", "side", "rear"];
-
-const schema = yup.object().shape({
-  [FormField.Amount]: yup
-    .number()
-    .min(0)
-    .max(300)
-    .required("Amount is required"),
-  [FormField.Allocation]: yup
-    .number()
-    .min(0)
-    .max(yup.ref("amount"))
-    .required("Allocation is required"),
-  [FormField.DamagedParts]: yup
-    .array()
-    .of(yup.string())
-    .required("Damaged parts are required"),
-  [FormField.Witnesses]: yup
-    .array()
-    .of(
-      yup.object().shape({
-        name: yup.string().required("Witness name is required"),
-        email: yup
-          .string()
-          .email("Invalid email format")
-          .required("Email is required"),
-      })
-    )
-    .min(1, "At least one witness is required")
-    .max(5, "No more than 5 witnesses"),
-});
 
 export function MainForm(): JSX.Element {
   const {
@@ -46,10 +15,7 @@ export function MainForm(): JSX.Element {
     watch,
     setValue,
     formState: { errors },
-  } = useForm({
-    defaultValues: initialValues,
-    resolver: yupResolver(schema),
-  });
+  } = useFormContext();
 
   const amount = watch(FormField.Amount);
 
@@ -116,7 +82,7 @@ export function MainForm(): JSX.Element {
         {errors.damagedParts && <span>{errors.damagedParts.message}</span>}
       </div>
 
-      <NestedFields amount={amount} control={control} errors={errors} />
+      <NestedFields amount={amount} />
 
       <button type="submit">Submit</button>
     </form>

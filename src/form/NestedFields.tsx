@@ -3,18 +3,18 @@ import { Controller, useFieldArray } from "react-hook-form";
 import { FormCategory, FormField } from "./FormTypes";
 import { useCallback, useEffect, useState } from "react";
 import { convertStreamToJson } from "./apiUtils";
+import { useFormContext } from "./FormContext";
 
 export type NestedFieldsProps = {
   amount: number;
-  errors: any;
-  control: any; // TODO: create context
 };
 
-export function NestedFields({
-  amount,
-  errors,
-  control,
-}: NestedFieldsProps): JSX.Element {
+export function NestedFields({ amount }: NestedFieldsProps): JSX.Element {
+  const {
+    control,
+    formState: { errors },
+  } = useFormContext();
+
   const { fields, append, remove } = useFieldArray({
     control,
     name: "witnesses",
@@ -88,7 +88,9 @@ export function NestedFields({
           />
           {errors.category && <span>{errors.category.message}</span>}
         </div>
-      ) : "Loading categories..."}
+      ) : (
+        "Loading categories..."
+      )}
 
       <div>
         <label>Witnesses</label>

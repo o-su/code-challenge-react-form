@@ -1,10 +1,12 @@
-import './App.css';
-import { MainForm } from './form/MainForm';
-
+import "./App.css";
+import { FormProvider } from "./form/FormContext";
+import { MainForm } from "./form/MainForm";
 
 function App() {
   return (
-   <MainForm />
+    <FormProvider>
+      <MainForm />
+    </FormProvider>
   );
 }
 

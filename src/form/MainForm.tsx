@@ -3,58 +3,28 @@ import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
+import { FormField, FormData } from "./FormTypes";
+import { initialValues } from "./FormInitialData";
+import { NestedFields } from "./NestedFields";
+
 const damagedPartsOptions = ["roof", "front", "side", "rear"];
 
-type FormData = {
-  amount: number;
-  allocation: number;
-  damagedParts: (string | undefined)[];
-  category?: string;
-  witnesses?: WitnessDataEntry[];
-};
-
-type WitnessDataEntry = {
-  name: string;
-  email: string;
-};
-
- enum FormField {
-  Amount = "amount",
-  Allocation = "allocation",
-  DamagedParts = "damagedParts",
-  Category = "category",
-  Witnesses = "witnesses",
-}
-
-const initialValues: FormData = {
-  [FormField.Amount]: 250,
-  [FormField.Allocation]: 140,
-  [FormField.DamagedParts]: ["side", "rear"],
-  [FormField.Category]: "kitchen-accessories",
-  [FormField.Witnesses]: [
-    {
-      name: "Marek",
-      email: "marek@email.cz",
-    },
-    {
-      name: "Emily",
-      email: "emily.johnson@x.dummyjson.com",
-    },
-  ],
-};
-
 const schema = yup.object().shape({
-  [FormField.Amount]: yup.number().min(0).max(300).required("Amount is required"),
+  [FormField.Amount]: yup
+    .number()
+    .min(0)
+    .max(300)
+    .required("Amount is required"),
   [FormField.Allocation]: yup
     .number()
     .min(0)
     .max(yup.ref("amount"))
     .required("Allocation is required"),
-    [FormField.DamagedParts]: yup
+  [FormField.DamagedParts]: yup
     .array()
     .of(yup.string())
     .required("Damaged parts are required"),
-    [FormField.Witnesses]: yup
+  [FormField.Witnesses]: yup
     .array()
     .of(
       yup.object().shape({
@@ -85,7 +55,10 @@ export function MainForm(): JSX.Element {
 
   useEffect(() => {
     if (amount) {
-      setValue(FormField.Allocation, Math.min(initialValues.allocation, amount));
+      setValue(
+        FormField.Allocation,
+        Math.min(initialValues.allocation, amount)
+      );
     }
   }, [amount, setValue]);
 
@@ -142,6 +115,8 @@ export function MainForm(): JSX.Element {
         ))}
         {errors.damagedParts && <span>{errors.damagedParts.message}</span>}
       </div>
+
+      <NestedFields amount={amount} control={control} errors={errors} />
 
       <button type="submit">Submit</button>
     </form>

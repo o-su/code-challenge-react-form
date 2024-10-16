@@ -1,14 +1,151 @@
-/**
- * Zde vytvořte formulářové vstupy pomocí react-hook-form, které:
- * 1) Budou součástí formuláře v MainForm, ale zůstanou v odděleném souboru
- * 2) Reference formuláře NEbude získána skrze Prop input (vyvarovat se "Prop drilling")
- * 3) Získá volby (options) pro pole "kategorie" z externího API: https://dummyjson.com/products/categories jako "value" bude "slug", jako "label" bude "name".
- *
- *
- * V tomto souboru budou definovány pole:
- * allocation - number; Bude disabled pokud není amount (z MainForm) vyplněno. Validace na min=0, max=[zadaná hodnota v amount]
- * category - string; Select input s volbami z API (label=name; value=slug)
- * witnesses - FieldArray - dynamické pole kdy lze tlačítkem přidat a odebrat dalšího svědka; Validace minimálně 1 svědek, max 5 svědků
- * witnesses.name - string; Validace required
- * witnesses.email - string; Validace e-mail a asynchronní validace, že email neexistuje na API https://dummyjson.com/users/search?q=[ZADANÝ EMAIL]  - tato validace by měla mít debounce 500ms
- */
+import { Controller, useFieldArray } from "react-hook-form";
+
+import { FormCategory, FormField } from "./FormTypes";
+import { useCallback, useEffect, useState } from "react";
+import { convertStreamToJson } from "./apiUtils";
+
+export type NestedFieldsProps = {
+  amount: number;
+  errors: any;
+  control: any; // TODO: create context
+};
+
+export function NestedFields({
+  amount,
+  errors,
+  control,
+}: NestedFieldsProps): JSX.Element {
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "witnesses",
+  });
+  const [categories, setCategories] = useState<FormCategory[] | undefined>(
+    undefined
+  );
+
+  const loadCategories = useCallback(async () => {
+    try {
+      const response = await fetch("https://dummyjson.com/products/categories");
+
+      if (!response.ok || !response.body) {
+        throw new Error(`Network response was not ok: ${response.statusText}`);
+      }
+
+      const data = response.body
+        ? await convertStreamToJson<FormCategory[]>(response.body)
+        : undefined;
+
+      setCategories(data);
+    } catch (error) {
+      console.error("Failed to load categories", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
+
+  return (
+    <>
+      <div>
+        <label>Allocation</label>
+        <Controller
+          name={FormField.Amount}
+          control={control}
+          render={({ field }) => (
+            <input
+              {...field}
+              type="number"
+              disabled={!amount}
+              min="0"
+              max={amount || 300}
+              style={{ borderColor: errors.allocation ? "red" : "black" }}
+            />
+          )}
+        />
+        {errors.allocation && <span>{errors.allocation.message}</span>}
+      </div>
+
+      {categories ? (
+        <div>
+          <label>Category</label>
+          <Controller
+            name="category"
+            control={control}
+            render={({ field }) => (
+              <select
+                {...field}
+                style={{ borderColor: errors.category ? "red" : "black" }}
+              >
+                <option value="">Select Category</option>
+                {categories.map((category) => (
+                  <option key={category.slug} value={category.slug}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          />
+          {errors.category && <span>{errors.category.message}</span>}
+        </div>
+      ) : "Loading categories..."}
+
+      <div>
+        <label>Witnesses</label>
+        {fields.map((field, index) => (
+          <div key={field.id}>
+            <Controller
+              name={`witnesses.${index}.name`}
+              control={control}
+              render={({ field }) => (
+                <input
+                  {...field}
+                  placeholder="Witness Name"
+                  style={{
+                    borderColor: errors.witnesses?.[index]?.name
+                      ? "red"
+                      : undefined,
+                  }}
+                />
+              )}
+            />
+            {errors.witnesses?.[index]?.name && (
+              <span>{errors.witnesses[index].name.message}</span>
+            )}
+
+            <Controller
+              name={`witnesses.${index}.email`}
+              control={control}
+              render={({ field }) => (
+                <input
+                  {...field}
+                  placeholder="Witness Email"
+                  style={{
+                    borderColor: errors.witnesses?.[index]?.email
+                      ? "red"
+                      : "black",
+                  }}
+                />
+              )}
+            />
+            {errors.witnesses?.[index]?.email && (
+              <span>{errors.witnesses[index].email.message}</span>
+            )}
+
+            <button type="button" onClick={() => remove(index)}>
+              Remove Witness
+            </button>
+          </div>
+        ))}
+
+        {fields.length < 5 && (
+          <button type="button" onClick={() => append({ name: "", email: "" })}>
+            Add Witness
+          </button>
+        )}
+
+        {errors.witnesses && <span>{errors.witnesses.message}</span>}
+      </div>
+    </>
+  );
+}

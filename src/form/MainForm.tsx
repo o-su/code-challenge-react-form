@@ -1,10 +1,10 @@
 import { useCallback, useEffect } from "react";
-import { Controller } from "react-hook-form";
+import { Controller, FieldValues, useFormContext } from "react-hook-form";
 
-import { FormField, FormData } from "./FormTypes";
+import { FormField } from "./FormTypes";
 import { initialValues } from "./FormInitialData";
 import { NestedFields } from "./NestedFields";
-import { useFormContext } from "./FormContext";
+import { ErrorMessage } from "@hookform/error-message";
 
 const damagedPartsOptions = ["roof", "front", "side", "rear"];
 
@@ -28,7 +28,7 @@ export function MainForm(): JSX.Element {
     }
   }, [amount, setValue]);
 
-  const onSubmit = useCallback((data: FormData) => {
+  const onSubmit = useCallback((data: FieldValues) => {
     console.log(data);
   }, []);
 
@@ -49,7 +49,9 @@ export function MainForm(): JSX.Element {
             />
           )}
         />
-        {errors.amount && <span>{errors.amount.message}</span>}
+        {errors.amount && (
+          <ErrorMessage errors={errors} name={FormField.Amount} />
+        )}
       </div>
 
       <div>
@@ -79,7 +81,9 @@ export function MainForm(): JSX.Element {
             <label>{option}</label>
           </div>
         ))}
-        {errors.damagedParts && <span>{errors.damagedParts.message}</span>}
+        {errors.damagedParts && (
+          <ErrorMessage errors={errors} name={FormField.DamagedParts} />
+        )}
       </div>
 
       <NestedFields amount={amount} />

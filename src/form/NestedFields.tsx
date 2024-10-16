@@ -1,9 +1,9 @@
-import { Controller, useFieldArray } from "react-hook-form";
+import { Controller, useFieldArray, useFormContext } from "react-hook-form";
 
 import { FormCategory, FormField } from "./FormTypes";
 import { useCallback, useEffect, useState } from "react";
 import { convertStreamToJson } from "./apiUtils";
-import { useFormContext } from "./FormContext";
+import { ErrorMessage } from "@hookform/error-message";
 
 export type NestedFieldsProps = {
   amount: number;
@@ -50,7 +50,7 @@ export function NestedFields({ amount }: NestedFieldsProps): JSX.Element {
       <div>
         <label>Allocation</label>
         <Controller
-          name={FormField.Amount}
+          name={FormField.Allocation}
           control={control}
           render={({ field }) => (
             <input
@@ -63,7 +63,9 @@ export function NestedFields({ amount }: NestedFieldsProps): JSX.Element {
             />
           )}
         />
-        {errors.allocation && <span>{errors.allocation.message}</span>}
+        {errors.allocation && (
+          <ErrorMessage errors={errors} name={FormField.Allocation} />
+        )}
       </div>
 
       {categories ? (
@@ -86,7 +88,9 @@ export function NestedFields({ amount }: NestedFieldsProps): JSX.Element {
               </select>
             )}
           />
-          {errors.category && <span>{errors.category.message}</span>}
+          {errors.category && (
+            <ErrorMessage errors={errors} name={FormField.Category} />
+          )}
         </div>
       ) : (
         "Loading categories..."
@@ -102,18 +106,11 @@ export function NestedFields({ amount }: NestedFieldsProps): JSX.Element {
               render={({ field }) => (
                 <input
                   {...field}
+                  required
                   placeholder="Witness Name"
-                  style={{
-                    borderColor: errors.witnesses?.[index]?.name
-                      ? "red"
-                      : undefined,
-                  }}
                 />
               )}
             />
-            {errors.witnesses?.[index]?.name && (
-              <span>{errors.witnesses[index].name.message}</span>
-            )}
 
             <Controller
               name={`witnesses.${index}.email`}
@@ -121,18 +118,11 @@ export function NestedFields({ amount }: NestedFieldsProps): JSX.Element {
               render={({ field }) => (
                 <input
                   {...field}
+                  required
                   placeholder="Witness Email"
-                  style={{
-                    borderColor: errors.witnesses?.[index]?.email
-                      ? "red"
-                      : "black",
-                  }}
                 />
               )}
             />
-            {errors.witnesses?.[index]?.email && (
-              <span>{errors.witnesses[index].email.message}</span>
-            )}
 
             <button type="button" onClick={() => remove(index)}>
               Remove Witness
@@ -146,7 +136,9 @@ export function NestedFields({ amount }: NestedFieldsProps): JSX.Element {
           </button>
         )}
 
-        {errors.witnesses && <span>{errors.witnesses.message}</span>}
+        {errors.witnesses && (
+          <ErrorMessage errors={errors} name={FormField.Witnesses} />
+        )}
       </div>
     </>
   );
